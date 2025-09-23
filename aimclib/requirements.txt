@@ -1,0 +1,16 @@
+# ALPINE AIMC Library Requirements
+# Python 3.8+ required for Ubuntu 22.04
+
+# Core dependencies
+numpy>=1.21.0,<2.0.0
+
+# Optional dependencies for enhanced functionality
+# scipy>=1.7.0  # For advanced mathematical operations
+# matplotlib>=3.5.0  # For visualization and debugging
+# pytest>=6.0.0  # For testing
+# black>=22.0.0  # For code formatting
+# flake8>=4.0.0  # For linting
+
+# Development dependencies (uncomment if needed)
+# jupyter>=1.0.0  # For interactive development
+# ipython>=7.0.0  # Enhanced Python shell

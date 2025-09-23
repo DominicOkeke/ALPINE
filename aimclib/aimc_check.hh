@@ -47,45 +47,52 @@
 
 #include <iostream>
 #include <vector>
+#include <memory>
+#include <algorithm>
+#include <cstdint>
+#include <array>
 
-using namespace std;
+// C++17 features: using namespace std is discouraged, use specific namespaces
+using std::cout;
+using std::endl;
+using std::vector;
+using std::unique_ptr;
+using std::make_unique;
 
 
 //////////////////////////
 // Core-Local AIMC Core //
 //////////////////////////
 struct AnalogComputationalMemoryCore {
-    // Constructor.
+    // C++17 constructor with member initializer list and smart pointers
     AnalogComputationalMemoryCore() : 
     crossbarHeight(4000),
     crossbarWidth(4000),
-    crossbar(new int8_t[crossbarWidth*crossbarHeight]),
-    inputMemory(new int8_t[crossbarHeight]),
-    outputMemory(new int8_t[crossbarWidth]),
+    crossbar(std::make_unique<int8_t[]>(crossbarWidth * crossbarHeight)),
+    inputMemory(std::make_unique<int8_t[]>(crossbarHeight)),
+    outputMemory(std::make_unique<int8_t[]>(crossbarWidth)),
     inputMemoryCounter(0),
     outputMemoryCounter(0),
     vectorization(4)
     {
-        for (int i = 0; i < crossbarHeight; i++) {
-            inputMemory[i] = 0;
-            for (int j = 0; j < crossbarWidth; j++) {
-                crossbar[(i * crossbarWidth) + j] = 0;
-            }
-        }
-
-        for (int i = 0; i < crossbarWidth; i++) {
-            outputMemory[i] = 0;
-        }
+        // C++17: Use std::fill for better performance and clarity
+        std::fill(inputMemory.get(), inputMemory.get() + crossbarHeight, 0);
+        std::fill(outputMemory.get(), outputMemory.get() + crossbarWidth, 0);
+        std::fill(crossbar.get(), crossbar.get() + crossbarWidth * crossbarHeight, 0);
     }
 
-    const int crossbarHeight;   // Height of input memory too.
-    const int crossbarWidth;    // Width of output memory too.
-    int8_t * crossbar;          // Parameters crossbar.
-    int8_t * inputMemory;       // Input memory (pre-DAC).
-    int8_t * outputMemory;      // Output memory (post-ADC).
-    int inputMemoryCounter;     // Index into input memory.
-    int outputMemoryCounter;    // Index into output memory.
-    const int vectorization;    // How many values do we queue/dequeue?
+    // C++17: Use constexpr for compile-time constants
+    static constexpr int crossbarHeight = 4000;   // Height of input memory too.
+    static constexpr int crossbarWidth = 4000;    // Width of output memory too.
+    static constexpr int vectorization = 4;       // How many values do we queue/dequeue?
+    
+    // C++17: Use smart pointers for automatic memory management
+    std::unique_ptr<int8_t[]> crossbar;          // Parameters crossbar.
+    std::unique_ptr<int8_t[]> inputMemory;       // Input memory (pre-DAC).
+    std::unique_ptr<int8_t[]> outputMemory;      // Output memory (post-ADC).
+    
+    int inputMemoryCounter{0};     // Index into input memory.
+    int outputMemoryCounter{0};    // Index into output memory.
 };
 
 
@@ -94,176 +101,186 @@ struct AnalogComputationalMemoryCore {
 ////////////////
 class AnalogComputationalMemory {
   public:
-    // All aimc cores (per thread).
-    std::vector<AnalogComputationalMemoryCore *> cores;
+    // C++17: Use smart pointers for automatic memory management
+    std::vector<std::unique_ptr<AnalogComputationalMemoryCore>> cores;
 
   public:
-    AnalogComputationalMemory()
-    {
-        cores.push_back(new AnalogComputationalMemoryCore());
-    }
+    // C++17: Use default member initializers and delegating constructors
+    AnalogComputationalMemory() : AnalogComputationalMemory(1) {}
 
-    AnalogComputationalMemory(int numOfCores)
+    explicit AnalogComputationalMemory(int numOfCores)
     {
+        cores.reserve(numOfCores);  // C++17: Reserve space for better performance
         for (int i = 0; i < numOfCores; i++) {
-            cores.push_back(new AnalogComputationalMemoryCore());
+            cores.push_back(std::make_unique<AnalogComputationalMemoryCore>());
         }
     }
 
-    ~AnalogComputationalMemory()
-    {
-        for (auto core : cores) {
-            delete[] core->inputMemory;
-            delete[] core->outputMemory;
-            delete[] core->crossbar;
-            delete[] core;
-        }
-    }
+    // C++17: Rule of Five - default destructor is sufficient with smart pointers
+    ~AnalogComputationalMemory() = default;
+    
+    // C++17: Disable copy constructor and assignment operator
+    AnalogComputationalMemory(const AnalogComputationalMemory&) = delete;
+    AnalogComputationalMemory& operator=(const AnalogComputationalMemory&) = delete;
+    
+    // C++17: Enable move constructor and assignment operator
+    AnalogComputationalMemory(AnalogComputationalMemory&&) = default;
+    AnalogComputationalMemory& operator=(AnalogComputationalMemory&&) = default;
 
-    // Helpers for debugging.
-    void
-    printInputMemory(int tid, int limit = 10)
+    // C++17: Helpers for debugging with const correctness and range-based loops
+    void printInputMemory(int tid, int limit = 10) const
     {
-        int tmp;
+        if (tid < 0 || tid >= static_cast<int>(cores.size())) return;
+        
         cout << "AIMC Core " << tid << " Input Memory =\n";
-        for (int i = 0; i < cores[tid]->crossbarHeight && i < limit; i++) {
+        const auto& core = cores[tid];
+        for (int i = 0; i < core->crossbarHeight && i < limit; i++) {
             if (((i % 10) == 0) && (i > 0)) {
                 cout << endl;
             }
-            tmp = cores[tid]->inputMemory[i];
-            cout << dec << tmp << '\t';
-        } cout << endl;
+            cout << static_cast<int>(core->inputMemory[i]) << '\t';
+        } 
+        cout << endl;
     }
 
-    void
-    printOutputMemory(int tid, int limit = 10)
+    void printOutputMemory(int tid, int limit = 10) const
     {
-        int tmp;
+        if (tid < 0 || tid >= static_cast<int>(cores.size())) return;
+        
         cout << "AIMC Core " << tid << " Output Memory =\n";
-        for (int i = 0; i < cores[tid]->crossbarWidth && i < 10; i++) {
+        const auto& core = cores[tid];
+        for (int i = 0; i < core->crossbarWidth && i < limit; i++) {
             if (((i % 10) == 0) && (i > 0)) {
                 cout << endl;
             }
-            tmp = cores[tid]->outputMemory[i];
-            cout << dec << tmp << '\t';
-        } cout << endl;
+            cout << static_cast<int>(core->outputMemory[i]) << '\t';
+        } 
+        cout << endl;
     }
 
-    void
-    printCrossbar(int tid, int limit = 10)
+    void printCrossbar(int tid, int limit = 10) const
     {
-        int tmp;
+        if (tid < 0 || tid >= static_cast<int>(cores.size())) return;
+        
         cout << "AIMC Core " << tid << " Crossbar =\n";
-        for (int i = 0; i < cores[tid]->crossbarWidth && i < 10; i++) {
-            for (int j = 0; j < 10; j++) {
-                tmp = cores[tid]->crossbar[(i * cores[tid]->crossbarWidth) + j];
-                cout << tmp << '\t';
+        const auto& core = cores[tid];
+        for (int i = 0; i < core->crossbarWidth && i < limit; i++) {
+            for (int j = 0; j < limit; j++) {
+                cout << static_cast<int>(core->crossbar[i * core->crossbarWidth + j]) << '\t';
             }
             cout << endl;
-        } cout << endl;
+        } 
+        cout << endl;
     }
 
-    // AIMC operations.
-    void
-    aimcProcess(int tid = 0)
+    // C++17: AIMC operations with bounds checking and const correctness
+    void aimcProcess(int tid = 0)
     {
-        int height = cores[tid]->crossbarHeight;
-        int width = cores[tid]->crossbarWidth;
+        if (tid < 0 || tid >= static_cast<int>(cores.size())) return;
+        
+        auto& core = cores[tid];
+        constexpr int height = AnalogComputationalMemoryCore::crossbarHeight;
+        constexpr int width = AnalogComputationalMemoryCore::crossbarWidth;
 
         for (int i = 0; i < width; i++) {
             double acc = 0.0;
 
             for (int j = 0; j < height; j++) {
-                acc += (cores[tid]->inputMemory[j]) * cores[tid]->crossbar[(j * width) + i];
+                acc += static_cast<double>(core->inputMemory[j]) * 
+                       static_cast<double>(core->crossbar[j * width + i]);
             }
 
-            if (acc > 127) cores[tid]->outputMemory[i] = 127;
-            else if (acc < -128) cores[tid]->outputMemory[i] = -128;
-            else cores[tid]->outputMemory[i] = (int8_t)acc;
+            // C++17: Use std::clamp for better bounds checking
+            constexpr int8_t min_val = -128;
+            constexpr int8_t max_val = 127;
+            core->outputMemory[i] = static_cast<int8_t>(std::clamp(acc, 
+                static_cast<double>(min_val), static_cast<double>(max_val)));
         }
 
-        // Refresh input memory and queue counters.
-        for (int i = 0; i < height; i++) {
-            cores[tid]->inputMemory[i] = 0;
-        }
+        // C++17: Use std::fill for better performance
+        std::fill(core->inputMemory.get(), core->inputMemory.get() + height, 0);
 
-        cores[tid]->inputMemoryCounter = 0;
-        cores[tid]->outputMemoryCounter = 0;
-
-        return;
+        core->inputMemoryCounter = 0;
+        core->outputMemoryCounter = 0;
     }
 
-    void
-    aimcQueue(int tid, uint32_t val)
+    // C++17: Queue function with bounds checking
+    void aimcQueue(int tid, uint32_t val)
     {
-        int idx = cores[tid]->inputMemoryCounter;
-        int length = cores[tid]->vectorization;
+        if (tid < 0 || tid >= static_cast<int>(cores.size())) return;
+        
+        auto& core = cores[tid];
+        int idx = core->inputMemoryCounter;
+        constexpr int length = AnalogComputationalMemoryCore::vectorization;
 
-        if ((idx + length) < cores[tid]->crossbarHeight) {
+        if ((idx + length) < AnalogComputationalMemoryCore::crossbarHeight) {
             for (int i = 0; i < length; i++) {
-                int8_t currVal = (val >> (8 * i)) & 0xff;
-                cores[tid]->inputMemory[idx + i] = currVal;
+                int8_t currVal = static_cast<int8_t>((val >> (8 * i)) & 0xff);
+                core->inputMemory[idx + i] = currVal;
             }
         }
 
-        cores[tid]->inputMemoryCounter += length;
-
-        return;
+        core->inputMemoryCounter += length;
     }
 
-    uint32_t
-    aimcDequeue(int tid)
+    // C++17: Dequeue function with bounds checking
+    uint32_t aimcDequeue(int tid)
     {
+        if (tid < 0 || tid >= static_cast<int>(cores.size())) return 0;
+        
+        auto& core = cores[tid];
         uint32_t result = 0;
-        int idx = cores[tid]->outputMemoryCounter;
-        int length = cores[tid]->vectorization;
+        int idx = core->outputMemoryCounter;
+        constexpr int length = AnalogComputationalMemoryCore::vectorization;
 
-        if ((idx + length) < cores[tid]->crossbarWidth) {
-            for (int i = length-1; i > -1; i--) {
+        if ((idx + length) < AnalogComputationalMemoryCore::crossbarWidth) {
+            for (int i = length - 1; i >= 0; i--) {
                 result <<= 8;
-                result |= 0xff & (cores[tid]->outputMemory[idx + i]);
+                result |= 0xff & static_cast<uint8_t>(core->outputMemory[idx + i]);
             }
         }
 
-        cores[tid]->outputMemoryCounter += length;
-
+        core->outputMemoryCounter += length;
         return result;
     }
 
-    int8_t
-    aimcParamRead(int tid, int x, int y)
+    // C++17: Parameter read with bounds checking
+    int8_t aimcParamRead(int tid, int x, int y) const
     {
-        int8_t result = 0;
-        int height = cores[tid]->crossbarHeight;
-        int width = cores[tid]->crossbarWidth;
+        if (tid < 0 || tid >= static_cast<int>(cores.size())) return 0;
+        
+        const auto& core = cores[tid];
+        constexpr int height = AnalogComputationalMemoryCore::crossbarHeight;
+        constexpr int width = AnalogComputationalMemoryCore::crossbarWidth;
         int idx = (y * width) + x; // 1D index
 
-        if (idx < width * height) {
-            result = cores[tid]->crossbar[idx];
+        if (idx >= 0 && idx < width * height) {
+            return core->crossbar[idx];
         }
 
-        return result;
+        return 0;
     }
 
-    void
-    aimcParamWrite(int tid, int x, int y, int8_t val)
+    // C++17: Parameter write with bounds checking
+    void aimcParamWrite(int tid, int x, int y, int8_t val)
     {
-        int height = cores[tid]->crossbarHeight;
-        int width = cores[tid]->crossbarWidth;
+        if (tid < 0 || tid >= static_cast<int>(cores.size())) return;
+        
+        auto& core = cores[tid];
+        constexpr int height = AnalogComputationalMemoryCore::crossbarHeight;
+        constexpr int width = AnalogComputationalMemoryCore::crossbarWidth;
         int idx = (y * width) + x; // 1D index
 
-        if (idx < width * height) {
-            cores[tid]->crossbar[idx] = val;
+        if (idx >= 0 && idx < width * height) {
+            core->crossbar[idx] = val;
         }
-
-        return;
     }
 };
 
 
-// If we are compiling using the checker, instantiate one core and assume
-// initial thread 0.
-AnalogComputationalMemory aimc(8);
+// C++17: If we are compiling using the checker, instantiate one core and assume
+// initial thread 0. Use inline variable for better C++17 compliance
+inline AnalogComputationalMemory aimc{8};
 
 //////////////////////////
 // Intrinsics Emulation //
@@ -278,11 +295,10 @@ AnalogComputationalMemory aimc(8);
  *
  * Arguments: None.
  */
-inline uint64_t
-aimcProcess(int tid = 0)
+// C++17: Use constexpr and noexcept where appropriate
+constexpr uint64_t aimcProcess(int tid = 0) noexcept
 {
     aimc.aimcProcess(tid);
-
     return 0;
 }
 
@@ -297,11 +313,10 @@ aimcProcess(int tid = 0)
  * -- rm = QUEUE_MAX input values packed as <val7, val6, ..., val0> for
  *         queueing.
  */
-inline uint64_t
-aimcQueue(uint64_t rm, int tid = 0)
+// C++17: Use constexpr and noexcept where appropriate
+constexpr uint64_t aimcQueue(uint64_t rm, int tid = 0) noexcept
 {
     aimc.aimcQueue(tid, rm);
-
     return 0;
 }
 
@@ -315,8 +330,8 @@ aimcQueue(uint64_t rm, int tid = 0)
  * Queueing arguments:
  * -- rd = QUEUE_MAX output values packed as <val7, val6, ..., val0>.
  */
-inline uint64_t
-aimcDequeue(int tid = 0)
+// C++17: Use constexpr and noexcept where appropriate
+constexpr uint64_t aimcDequeue(int tid = 0) noexcept
 {
     return aimc.aimcDequeue(tid);
 }
@@ -333,8 +348,8 @@ aimcDequeue(int tid = 0)
  * -- rm = Parameter x index.
  * -- rn = Parameter y index.
  */
-inline uint64_t
-aimcParamRead(uint64_t rm, uint64_t rn, uint64_t ra, int tid = 0)
+// C++17: Use constexpr and noexcept where appropriate
+constexpr uint64_t aimcParamRead(uint64_t rm, uint64_t rn, uint64_t ra, int tid = 0) noexcept
 {
     return aimc.aimcParamRead(tid, rm, rn);
 }
@@ -352,11 +367,10 @@ aimcParamRead(uint64_t rm, uint64_t rn, uint64_t ra, int tid = 0)
  * -- ra = Parameter value.
  * -- rn = Parameter y index.
  */
-inline uint64_t
-aimcParamWrite(uint64_t rm, uint64_t rn, uint64_t ra, int tid = 0)
+// C++17: Use constexpr and noexcept where appropriate
+constexpr uint64_t aimcParamWrite(uint64_t rm, uint64_t rn, uint64_t ra, int tid = 0) noexcept
 {
     aimc.aimcParamWrite(tid, rm, rn, ra);
-
     return 0;
 }
 

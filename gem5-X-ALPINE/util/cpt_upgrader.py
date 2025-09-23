@@ -73,7 +73,7 @@
 # upgraders in private branches.
 
 
-import ConfigParser
+import configparser as ConfigParser
 import glob, types, sys, os
 import os.path as osp
 

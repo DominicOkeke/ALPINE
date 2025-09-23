@@ -349,8 +349,18 @@ if main['GCC'] or main['CLANG']:
     # we consistently violate
     main.Append(CCFLAGS=['-Wall', '-Wundef', '-Wextra',
                          '-Wno-sign-compare', '-Wno-unused-parameter'])
-    # We always compile using C++11
-    main.Append(CXXFLAGS=['-std=c++11'])
+    # We always compile using C++17 and C17 for Ubuntu 22.04 compatibility
+    main.Append(CXXFLAGS=['-std=c17'])
+    main.Append(CXXFLAGS=['-std=c++17'])
+    
+    # Modern GCC 11 optimizations for Ubuntu 22.04
+    if main['GCC']:
+        # Check if we have GCC 11+ for advanced optimizations
+        gcc_version = readCommand([main['CXX'], '-dumpversion'], exception=False)
+        if gcc_version and compareVersions(gcc_version, '11.0') >= 0:
+            main.Append(CCFLAGS=['-march=native', '-mtune=native'])
+            main.Append(CCFLAGS=['-fno-plt', '-fPIC'])
+            main.Append(CXXFLAGS=['-fconcepts', '-fcoroutines'])
     if sys.platform.startswith('freebsd'):
         main.Append(CCFLAGS=['-I/usr/local/include'])
         main.Append(CXXFLAGS=['-I/usr/local/include'])

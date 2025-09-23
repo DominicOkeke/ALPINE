@@ -41,10 +41,17 @@
 # Authors: Ali Saidi
 #          Brad Beckmann
 
-from __future__ import print_function
+#!/usr/bin/env python3
+"""
+ALPINE gem5-X-ALPINE Full System Configuration
+Updated for Ubuntu 22.04 with Python 3.10+ support
+"""
 
-import optparse
+from __future__ import print_function, absolute_import, division
+
+import argparse
 import sys
+import os
 
 import m5
 from m5.defines import buildEnv
@@ -153,14 +160,14 @@ def build_test_system(np, options):
 
     # For now, assign all the CPUs to the same clock domain
     #test_sys.cpu = [TestCPUClass(clk_domain=test_sys.cpu_clk_domain, cpu_id=i)
-    #                for i in xrange(np)]
+    #                for i in range(np)]
 
     cpus = []
 
-    for i in xrange(options.main_num_cpus):
+    for i in range(options.main_num_cpus):
         cpus.append(TestCPUClass(clk_domain=test_sys.cpu_clk_domain, cpu_id=i))
         print(options.cpu_type + " ID:" + str(i))
-    for i in xrange(options.alt_num_cpus):
+    for i in range(options.alt_num_cpus):
         cpus.append(AltCPUClass(clk_domain=test_sys.cpu_clk_domain,
             cpu_id=i+options.main_num_cpus))
         print(options.alt_cpu_type + " ID:" + str(i+options.main_num_cpus))
@@ -230,7 +237,7 @@ def build_test_system(np, options):
             if np > 1:
                 fatal("SimPoint generation not supported with more than one CPUs")
 
-        for i in xrange(np):
+        for i in range(np):
             if options.fastmem:
                 test_sys.cpu[i].fastmem = True
             if options.simpoint_profile:

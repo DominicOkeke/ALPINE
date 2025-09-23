@@ -11,57 +11,57 @@
 #ifndef __AIMC_DEQUEUE_HH__
 #define __AIMC_DEQUEUE_HH__
 
-// int8_t vector dequeueing into array.
-inline void
-dequeueVector(int size, int8_t * v, int tid = 0)
+#include <cstdint>
+#include <algorithm>
+#include <array>
+
+// C++17: int8_t vector dequeueing into array with improved type safety
+inline void dequeueVector(int size, int8_t* v, int tid = 0) noexcept
 {
+    if (!v || size <= 0) return;
+    
 #if defined (LOOSELY_COUPLED_MMIO)
     for (int i = 0; i < size; i++) {
-        v[i] = aimcDequeue();
+        v[i] = static_cast<int8_t>(aimcDequeue(tid));
     }
 #else // (LOOSELY_COUPLED_MMIO)
-    uint32_t tmp;
-    uint32_t * ptmp;
+    uint32_t tmp = 0;
 
     for (int i = 0; i < size; i++) {
         if (i % 4 == 0) {
             tmp = aimcDequeue(tid);
-            ptmp = &tmp;
         }
 
-        v[i] = *ptmp;
-        *ptmp >>= 8;
+        v[i] = static_cast<int8_t>(tmp & 0xff);
+        tmp >>= 8;
     }
 #endif // (LOOSELY_COUPLED_MMIO)
-
-    return;
 }
 
-// Vector dequeueing for higher precision, scaled according to max.
+// C++17: Vector dequeueing for higher precision, scaled according to max.
 template <typename T>
-inline void
-dequeueVector(int size, T max, T * v, int tid = 0)
+inline void dequeueVector(int size, T max, T* v, int tid = 0) noexcept
 {
+    if (!v || size <= 0 || max == 0) return;
+    
+    constexpr T scale_factor = 127;
+    
 #if defined (LOOSELY_COUPLED_MMIO)
     for (int i = 0; i < size; i++) {
-        v[i] = (aimcDequeue()) / 127 * max;
+        v[i] = (static_cast<T>(aimcDequeue(tid)) / scale_factor) * max;
     }
 #else // (LOOSELY_COUPLED_MMIO)
-    uint32_t tmp;
-    uint32_t * ptmp;
+    uint32_t tmp = 0;
 
     for (int i = 0; i < size; i++) {
         if (i % 4 == 0) {
             tmp = aimcDequeue(tid);
-            ptmp = &tmp;
         }
 
-        v[i] = (T)(*ptmp) / 127 * max;
-        *ptmp >>= 8;
+        v[i] = (static_cast<T>(tmp & 0xff) / scale_factor) * max;
+        tmp >>= 8;
     }
 #endif // (LOOSELY_COUPLED_MMIO)
-
-    return;
 }
 
 #endif // __AIMC_DEQUEUE_HH__

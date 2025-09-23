@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 # gem5img.py
 # Script for managing a gem5 disk image.

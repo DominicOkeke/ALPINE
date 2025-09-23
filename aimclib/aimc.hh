@@ -3,11 +3,17 @@
  * Joshua Klein
  * 
  * This file contains all of the includes for which to build the AIMC library.
+ * Updated for C++17 compatibility and GCC 11 on Ubuntu 22.04.
  *
  */
 
 #ifndef __AIMC_HH__
 #define __AIMC_HH__
+
+// C++17: Include standard headers first
+#include <cstdint>
+#include <memory>
+#include <algorithm>
 
 #if defined (USE_CHECKER) // Are we simulating the gem5 code w/ ISA extension?
 #include "aimc_check.hh"

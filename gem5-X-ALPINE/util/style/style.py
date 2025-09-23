@@ -78,7 +78,7 @@ class UserInterface(object):
 
 class StdioUI(UserInterface):
     def _prompt(self, prompt, results, default):
-        return raw_input(prompt) or default
+        return input(prompt) or default
 
     def write(self, string):
         sys.stdout.write(string)

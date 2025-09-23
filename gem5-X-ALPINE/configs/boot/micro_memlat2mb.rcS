@@ -1,3 +1,15 @@
+#!/bin/bash
+# ALPINE gem5-X-ALPINE Memory Latency Microbenchmark
+# Updated for Ubuntu 22.04 with modern shell standards
+
+set -euo pipefail  # Exit on error, undefined vars, pipe failures
+
+echo "Starting memory latency microbenchmark (2MB)"
+echo "============================================="
+
+# Run memory latency benchmark
 /benchmarks/micros/lmbench/bin/alphaev6-linux-gnu/lat_mem_rd_2MB 2 64
+
+echo "Memory latency microbenchmark completed"
 m5 exit
 

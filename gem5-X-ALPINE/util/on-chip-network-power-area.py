@@ -25,7 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from ConfigParser import ConfigParser
+from configparser import ConfigParser
 import string, sys, subprocess, os
 
 # Compile DSENT to generate the Python module and then import it.

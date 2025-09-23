@@ -1,0 +1,87 @@
+﻿# ALPINE Simulation .gitignore
+# Generated for optimized ALPINE simulation repository
+
+# Build artifacts
+build/
+m5out/
+*.o
+*.so
+*.a
+*.dylib
+*.dll
+*.exe
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+m5out/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# SCons
+.sconsign.dblite
+.sconsign.dblite.dblite
+
+# gem5 specific
+m5out/
+*.cpt
+*.cpt.*
+*.checkpoint
+*.checkpoint.*
+
+# ALPINE specific
+aimclib_python3/__pycache__/
+*.pyc
+*.pyo
+
+# Full system images
+full_system_images/binaries/
+full_system_images/disks/
+full_system_images/*.log
+
+# Documentation build
+docs/_build/
+docs/build/
+
+# Test outputs
+test_outputs/
+simulation_results/
+
+# Backup files
+*.orig
+*.rej

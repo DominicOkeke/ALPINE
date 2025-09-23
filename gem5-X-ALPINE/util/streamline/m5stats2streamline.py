@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 # Copyright (c) 2012, 2014 ARM Limited
 # All rights reserved
@@ -60,7 +60,7 @@
 # Subsequent versions should be backward compatible
 
 import re, sys, os
-from ConfigParser import ConfigParser
+from configparser import ConfigParser
 import gzip
 import xml.etree.ElementTree as ET
 import xml.dom.minidom as minidom

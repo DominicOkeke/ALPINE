@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 # Copyright (c) 2003-2004 The Regents of The University of Michigan
 # All rights reserved.
@@ -31,7 +31,7 @@
 import re, sys, math
 
 def usage():
-    print '''\
+    print('''\
 Usage: %s [-E] [-F] [ -G <get> ] [-d <db> ] [-g <graphdir> ] [-h <host>] [-p]
        [-s <system>] [-r <runs> ] [-T <samples>] [-u <username>]
        <command> [command args]
@@ -169,14 +169,14 @@ def commands(options, command, args):
         source.method = 'sum'
 
         def disp(*args):
-            print "%-35s %12s %12s %4s %5s %5s %5s %10s" % args
+            print("%-35s %12s %12s %4s %5s %5s %5s %10s" % args)
 
         # temporary variable containing a bunch of dashes
         d = '-' * 100
 
         #loop through all the stats selected
         for stat in stats:
-            print "%s:" % stat.name
+            print("%s:" % stat.name)
             disp("run name", "average", "stdev", ">10%", ">1SDV", ">2SDV",
                  "SAMP", "CV")
             disp(d[:35], d[:12], d[:12], d[:4], d[:5], d[:5], d[:5], d[:10])
@@ -246,7 +246,7 @@ def commands(options, command, args):
 
     if options.ticks:
         if not options.graph:
-            print 'only displaying sample %s' % options.ticks
+            print('only displaying sample %s' % options.ticks)
         source.ticks = [ int(x) for x in options.ticks.split() ]
 
     from output import StatOutput

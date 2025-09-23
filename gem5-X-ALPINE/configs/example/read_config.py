@@ -48,7 +48,7 @@
 from __future__ import print_function
 
 import argparse
-import ConfigParser
+import configparser as ConfigParser
 import inspect
 import json
 import re

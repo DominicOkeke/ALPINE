@@ -29,7 +29,7 @@
 # Authors: Lisa Hsu
 #          Nilay Vaish
 
-from ConfigParser import ConfigParser
+from configparser import ConfigParser
 import gzip
 
 import sys, re, os
@@ -59,10 +59,10 @@ def aggregate(output_dir, cpts, no_compress, memory_size):
     num_digits = len(str(len(cpts)-1))
 
     for (i, arg) in enumerate(cpts):
-        print arg
+        print(arg)
         merged_config = myCP()
         config = myCP()
-        config.readfp(open(cpts[i] + "/m5.cpt"))
+        config.read_file(open(cpts[i] + "/m5.cpt"))
 
         for sec in config.sections():
             if re.compile("cpu").search(sec):

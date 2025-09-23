@@ -11,6 +11,8 @@
 #ifndef __AIMC_INTRINSICS_HH__
 #define __AIMC_INTRINSICS_HH__
 
+#include <cstdint>
+
 /* CM Core Process (MVM)
  * Instruction format: |____Opcode___|__rm__|_X|__ra__|__rn__|__rd__|
  * Bits:               |31_________21|20__16|15|14__10|9____5|4____0|
@@ -20,8 +22,8 @@
  *
  * Arguments: None.
  */
-inline void
-aimcProcess(int tid = 0)
+// C++17: Use constexpr and noexcept where appropriate
+constexpr void aimcProcess(int tid = 0) noexcept
 {
     __asm__ volatile(
         ".long 0x01000000;"
@@ -29,8 +31,6 @@ aimcProcess(int tid = 0)
         :
         :
     );
-
-    return;
 }
 
 /* CM Core Input Memory Queue
@@ -44,8 +44,8 @@ aimcProcess(int tid = 0)
  * -- rm = QUEUE_MAX input values packed as <val7, val6, ..., val0> for
  *         queueing.
  */
-inline void
-aimcQueue(uint64_t rm, int tid = 0)
+// C++17: Use constexpr and noexcept where appropriate
+constexpr void aimcQueue(uint64_t rm, int tid = 0) noexcept
 {
     __asm__ volatile(
         "MOV X9, %[input_j];"
@@ -54,8 +54,6 @@ aimcQueue(uint64_t rm, int tid = 0)
         : [input_j] "r" (rm)
         : "x9"
     );
-
-    return;
 }
 
 /* CM Core Output Memory Dequeue
@@ -68,8 +66,8 @@ aimcQueue(uint64_t rm, int tid = 0)
  * Queueing arguments:
  * -- rd = QUEUE_MAX output values packed as <val7, val6, ..., val0>.
  */
-inline uint64_t
-aimcDequeue(int tid = 0)
+// C++17: Use constexpr and noexcept where appropriate
+constexpr uint64_t aimcDequeue(int tid = 0) noexcept
 {
     uint64_t res;
 
@@ -96,8 +94,8 @@ aimcDequeue(int tid = 0)
  * -- rm = Parameter x index.
  * -- rn = Parameter y index.
  */
-inline uint64_t
-aimcParamRead(uint64_t rm, uint64_t rn, uint64_t ra, int tid = 0)
+// C++17: Use constexpr and noexcept where appropriate
+constexpr uint64_t aimcParamRead(uint64_t rm, uint64_t rn, uint64_t ra, int tid = 0) noexcept
 {
     uint64_t res;
 
@@ -127,8 +125,8 @@ aimcParamRead(uint64_t rm, uint64_t rn, uint64_t ra, int tid = 0)
  * -- ra = Parameter value.
  * -- rn = Parameter y index.
  */
-inline uint64_t
-aimcParamWrite(uint64_t rm, uint64_t rn, uint64_t ra, int tid = 0)
+// C++17: Use constexpr and noexcept where appropriate
+constexpr uint64_t aimcParamWrite(uint64_t rm, uint64_t rn, uint64_t ra, int tid = 0) noexcept
 {
     uint64_t res;
 
